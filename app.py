@@ -1,9 +1,11 @@
+#!/home/fred/TornadoBot/venv/bin/python3
 import requests
 import tweepy
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 import os
 from web3 import Web3
+from pathlib import Path
 
 ethContracts = {
     'eth01': '0x12D66f87A04A9E220743712cE6d9bB1B5616B8Fc',
@@ -18,7 +20,9 @@ daiContracts = {
     'dai10000': '0xF60dD140cFf0706bAE9Cd734Ac3ae76AD9eBC32A'
 }
 
-load_dotenv()
+fdir = os.path.abspath(os.path.dirname(__file__))
+
+load_dotenv(Path(os.path.join(fdir, '.env')))
 
 API_KEY = os.getenv("ETHERSCAN_API")
 INFURA_KEY = os.getenv("INFURA_KEY")
@@ -27,7 +31,7 @@ CONSUMER_SECRET = os.getenv("CONSUMER_SECRET")
 ACCESS_TOKEN = os.getenv("ACCESS_TOKEN")
 ACCESS_TOKEN_SECRET = os.getenv("ACCESS_TOKEN_SECRET")
 
-abi = open('abi.json', 'r').read()
+abi = open(os.path.join(fdir, 'abi.json'), 'r').read()
 
 w3 = Web3(Web3.WebsocketProvider(f'wss://mainnet.infura.io/ws/v3/{INFURA_KEY}'))
 
