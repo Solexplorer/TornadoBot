@@ -1,11 +1,9 @@
-#!/home/fred/TornadoBot/venv/bin/python3
 import requests
 import tweepy
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 import os
 from web3 import Web3
-from pathlib import Path
 
 ethContracts = {
     'eth01': '0x12D66f87A04A9E220743712cE6d9bB1B5616B8Fc',
@@ -20,9 +18,7 @@ daiContracts = {
     'dai10000': '0xF60dD140cFf0706bAE9Cd734Ac3ae76AD9eBC32A'
 }
 
-fdir = os.path.abspath(os.path.dirname(__file__))
-
-load_dotenv(Path(os.path.join(fdir, '.env')))
+load_dotenv()
 
 API_KEY = os.getenv("ETHERSCAN_API")
 INFURA_KEY = os.getenv("INFURA_KEY")
@@ -31,33 +27,19 @@ CONSUMER_SECRET = os.getenv("CONSUMER_SECRET")
 ACCESS_TOKEN = os.getenv("ACCESS_TOKEN")
 ACCESS_TOKEN_SECRET = os.getenv("ACCESS_TOKEN_SECRET")
 
-abi = open(os.path.join(fdir, 'abi.json'), 'r').read()
+abi = open('abi.json', 'r').read()
 
 w3 = Web3(Web3.WebsocketProvider(f'wss://mainnet.infura.io/ws/v3/{INFURA_KEY}'))
 
 fromBlock = 0
 totalEth = float(0)
 totalDai = float(0)
-tweetMessage = 'Here are the stats from the last 24 hours:'
-split_messages = []
+tweetMessage = '24 hour transaction activity:'
 
 
 def build_message(tx_times, amount, token):
     global tweetMessage
-    tweetMessage += f'\n⚡ {tx_times} transactions with a value of {amount} {token} were made totalling {round(tx_times * float(amount), 2)} {token}'
-
-
-def split_message():
-    global split_messages
-    string_append = ''
-    data = tweetMessage.splitlines(keepends=True)
-    for i in data:
-        if len(string_append + i) < 280:
-            string_append += i
-        else:
-            split_messages.append(string_append)
-            string_append = i
-    split_messages.append(string_append)
+    tweetMessage += f'\n🌪 {tx_times} txs with {amount} {token}'
 
 
 def send_tweet():
@@ -72,8 +54,7 @@ def send_tweet():
 
 
 def send_message(api):
-    split_message()
-    id1 = api.update_status(split_messages[0]).id
+    id1 = api.update_status(tweetMessage).id
     try:
         id2 = api.update_status(split_messages[1], in_reply_to_status_id=id1).id
         api.update_status(split_messages[2], in_reply_to_status_id=id2)
@@ -126,8 +107,8 @@ def get_dai_deposits():
 if __name__ == "__main__":
     get_from_block()
     get_eth_deposits()
-    tweetMessage += f'\n⚡⚡⚡ With a total amount of {round(totalEth, 2)} ETH'
+    tweetMessage += f'\n🌪🌪🌪 With a total amount of {round(totalEth, 2)} ETH'
     get_dai_deposits()
-    tweetMessage += f'\n⚡⚡⚡ With a total amount of {totalDai} DAI'
+    tweetMessage += f'\n🌪🌪🌪 With a total amount of {totalDai} DAI'
     send_tweet()
 
