@@ -1,9 +1,11 @@
+#!/home/fred/TornadoBot/venv/bin/python3
 import requests
 import tweepy
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 import os
 from web3 import Web3
+from pathlib import Path
 
 ethContracts = {
     'eth01': '0x12D66f87A04A9E220743712cE6d9bB1B5616B8Fc',
@@ -18,7 +20,10 @@ daiContracts = {
     'dai10000': '0xF60dD140cFf0706bAE9Cd734Ac3ae76AD9eBC32A'
 }
 
-load_dotenv()
+#Need to get absolute path for the cron job
+fdir = os.path.abspath(os.path.dirname(__file__))
+
+load_dotenv(Path(os.path.join(fdir, '.env')))
 
 API_KEY = os.getenv("ETHERSCAN_API")
 INFURA_KEY = os.getenv("INFURA_KEY")
@@ -27,7 +32,7 @@ CONSUMER_SECRET = os.getenv("CONSUMER_SECRET")
 ACCESS_TOKEN = os.getenv("ACCESS_TOKEN")
 ACCESS_TOKEN_SECRET = os.getenv("ACCESS_TOKEN_SECRET")
 
-abi = open('abi.json', 'r').read()
+abi = open(os.path.join(fdir, 'abi.json'), 'r').read()
 
 w3 = Web3(Web3.WebsocketProvider(f'wss://mainnet.infura.io/ws/v3/{INFURA_KEY}'))
 
@@ -39,7 +44,8 @@ tweetMessage = '24 hour transaction activity:'
 
 def build_message(tx_times, amount, token):
     global tweetMessage
-    tweetMessage += f'\n🌪 {tx_times} txs with {amount} {token}'
+    calc = float(amount) * tx_times
+    tweetMessage += f'\n{tx_times} { "tx" if int(tx_times) == 1 else "txs" }: {amount} {token} { "🌪" if float(amount) * tx_times < 7 else "🌪🌪🌪" }'
 
 
 def send_tweet():
@@ -47,19 +53,8 @@ def send_tweet():
     auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
     api = tweepy.API(auth, wait_on_rate_limit=True,
                      wait_on_rate_limit_notify=True)
-    if len(tweetMessage) > 280:
-        send_message(api)
-    else:
-        api.update_status(tweetMessage)
+    api.update_status(tweetMessage).id
 
-
-def send_message(api):
-    id1 = api.update_status(tweetMessage).id
-    try:
-        id2 = api.update_status(split_messages[1], in_reply_to_status_id=id1).id
-        api.update_status(split_messages[2], in_reply_to_status_id=id2)
-    except IndexError:
-        pass
 
 
 def get_from_block():
@@ -107,8 +102,10 @@ def get_dai_deposits():
 if __name__ == "__main__":
     get_from_block()
     get_eth_deposits()
-    tweetMessage += f'\n🌪🌪🌪 With a total amount of {round(totalEth, 2)} ETH'
+    if totalEth:
+        tweetMessage += f'\nTotal {round(totalEth, 2)} ETH'
     get_dai_deposits()
-    tweetMessage += f'\n🌪🌪🌪 With a total amount of {totalDai} DAI'
+    if totalDai:
+        tweetMessage += f'\nTotal {totalDai} DAI'
     send_tweet()
 
