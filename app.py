@@ -44,8 +44,13 @@ tweetMessage = '24 hour transaction activity:'
 
 def build_message(tx_times, amount, token):
     global tweetMessage
-    calc = float(amount) * tx_times
-    tweetMessage += f'\n{tx_times} { "tx" if int(tx_times) == 1 else "txs" }: {amount} {token} { "🌪" if float(amount) * tx_times < 7 else "🌪🌪🌪" }'
+    if token == 'DAI' and float(amount) * tx_times > 1500:
+        emoji = "🌪🌪🌪"
+    elif token == 'ETH' and float(amount) * tx_times > 7:
+        emoji = "🌪🌪🌪"
+    else:
+        emoji = "🌪"
+    tweetMessage += f'\n{tx_times} { "tx" if int(tx_times) == 1 else "txs" }: {amount} {token} { emoji  }'
 
 
 def send_tweet():
@@ -103,9 +108,10 @@ if __name__ == "__main__":
     get_from_block()
     get_eth_deposits()
     if totalEth:
-        tweetMessage += f'\nTotal {round(totalEth, 2)} ETH'
+        tweetMessage += f'\n\nTotal: {round(totalEth, 2)} ETH'
     get_dai_deposits()
     if totalDai:
-        tweetMessage += f'\nTotal {totalDai} DAI'
+        tweetMessage += f'\nTotal: {totalDai} DAI'
     send_tweet()
+
 
