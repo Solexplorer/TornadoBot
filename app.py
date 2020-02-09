@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 import os
 from web3 import Web3
 from pathlib import Path
+from pycoingecko import CoinGeckoAPI
 
 ethContracts = {
     'eth01': '0x12D66f87A04A9E220743712cE6d9bB1B5616B8Fc',
@@ -33,6 +34,8 @@ ACCESS_TOKEN = os.getenv("ACCESS_TOKEN")
 ACCESS_TOKEN_SECRET = os.getenv("ACCESS_TOKEN_SECRET")
 
 abi = open(os.path.join(fdir, 'abi.json'), 'r').read()
+
+cg = CoinGeckoAPI()
 
 w3 = Web3(Web3.WebsocketProvider(f'wss://mainnet.infura.io/ws/v3/{INFURA_KEY}'))
 
@@ -112,6 +115,6 @@ if __name__ == "__main__":
     get_dai_deposits()
     if totalDai:
         tweetMessage += f'\nTotal: {totalDai} DAI'
+    eth_price = cg.get_price(ids='ethereum', vs_currencies='usd')['ethereum']['usd']
+    tweetMessage += f'\n\nTotal in USD: { int((totalEth + totalDai ) * eth_price) } 🌪'
     send_tweet()
-
-
