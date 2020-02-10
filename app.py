@@ -42,7 +42,7 @@ w3 = Web3(Web3.WebsocketProvider(f'wss://mainnet.infura.io/ws/v3/{INFURA_KEY}'))
 fromBlock = 0
 totalEth = float(0)
 totalDai = float(0)
-tweetMessage = '24 hour transaction activity:'
+tweetMessage = '24 hour transaction activity:\n'
 
 
 def build_message(tx_times, amount, token):
@@ -111,10 +111,10 @@ if __name__ == "__main__":
     get_from_block()
     get_eth_deposits()
     if totalEth:
-        tweetMessage += f'\n\nTotal: {round(totalEth, 2)} ETH'
+        tweetMessage += f'\n\nTotal: {round(totalEth, 2)} ETH\n'
     get_dai_deposits()
     if totalDai:
         tweetMessage += f'\nTotal: {totalDai} DAI'
     eth_price = cg.get_price(ids='ethereum', vs_currencies='usd')['ethereum']['usd']
-    tweetMessage += f'\n\nTotal in USD: { int((totalEth + totalDai ) * eth_price) } 🌪'
+    tweetMessage += f'\n\nTotal in USD: { int((totalEth) * eth_price) + totalDai } 🌪'
     send_tweet()
